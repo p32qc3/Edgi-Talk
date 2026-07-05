@@ -1,0 +1,11 @@
+EDGI PC WiFi setup
+
+1. Connect the board to the computer with the debugger USB cable.
+2. Before first use, set OPENOCD_EXE and OPENOCD_SCRIPTS to your local
+   Infineon OpenOCD executable and scripts directory.
+3. Double-click wifi_provision.cmd.
+4. Enter the WiFi name and password.
+5. Wait for the success message.
+
+The successful WiFi is saved on the board. Future power-ups reconnect
+automatically. Run the tool again at any time to switch to another WiFi.

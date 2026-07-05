@@ -1,0 +1,11 @@
+# 复制到：Edgi_Talk_M55_LVGL/applications/m55/
+import os
+from building import *
+
+cwd = GetCurrentDir()
+src = Glob('src/*.c')
+inc = [os.path.join(cwd, 'include')]
+
+group = DefineGroup('edgi_m55_pack', src, depend=[''], CPPPATH=inc)
+
+Return('group')
