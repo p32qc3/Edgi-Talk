@@ -1,0 +1,14 @@
+{
+  "common/pet_types.h": "e2e32ad8e4f621c825846c0f1fe13989d1c2c747ca7a9a57a86ff0dc3f0438a4",
+  "edgi/pet_core.h": "813574f31315bd6fd76144e9cc1fc50c597031b7d7eb17c79924b3541b8bb147",
+  "edgi/pet_core.c": "e57e3b2b610000f9a0ecc0ed30cdd1cf92a57cc467d2ed85432013755a180e30",
+  "edgi/pet_balance.h": "d2b5b887b9bd93df0ef5616de3d6d11cbb9c88cb94a8796658b9bdb5fb529271",
+  "edgi/interaction_hold.h": "a852af5f2b8a5b7a6f0f22c86b0eec1242cd6fb523af0c442a1383018822cf34",
+  "edgi/interaction_hold.c": "8634681a0cab75201d05d7acde223a07b438e3852605879354566a18f74da3d6",
+  "edgi/storage.h": "479303c007f1243f3b9044a6ee958320393a1f19c29edcbc5e33ee4d77f87d9c",
+  "edgi/storage.c": "5c7d187681113b32b9ebdb818ed531ae33b46b1dd7183b175de2b99c55f3199c",
+  "edgi/storage_journal.h": "7898c6fcb1a0371de701696e42ebe68c60ebe8e58cc3540449e8ce687026cee3",
+  "edgi/storage_journal.c": "eb36ff38949f1f2c4fe122399a0e427c39b6dda34205e5857afe0ee60607a718",
+  "common/protocol.h": "58f76ca2621c7729532f8d347b087c108bb96582898a7557eb428f786e545ba2",
+  "common/protocol.c": "16767b1cc8e72d059921d1381358a7a72eed796f6e12549eceda623607889b83"
+}

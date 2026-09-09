@@ -1,0 +1,4 @@
+from building import *
+cwd = GetCurrentDir()
+group = DefineGroup('PetIMU_ST', Glob('*_reg.c'), depend=[''], CPPPATH=[cwd])
+Return('group')

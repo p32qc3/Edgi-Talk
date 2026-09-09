@@ -1,11 +1,17 @@
 #include <rtthread.h>
 #include "m33/include/edgi_key_button.h"
+#include "../../pet_shared/pet_flash_gate.h"
 
 int main(void)
 {
-    rt_kprintf("\r\n======== Edgi-Talk_Audio CM33 ========\r\n");
+    rt_kprintf("\r\n======== Edgi-Talk Pet M33 (AB1) ========\r\n");
     rt_kprintf("KEY/blue on CM33 | cmd: cm55_stat m33_stat m33_fire\r\n");
     rt_kprintf("Screen/LVGL on M55 | M55 does not use COM5 input\r\n");
+
+    if (pet_flash_gate_start() != RT_EOK)
+        rt_kprintf("Flash gate thread failed\r\n");
+    else
+        rt_kprintf("Flash gate initialized for M55 storage coordination\r\n");
 
     edgi_key_button_init();
     rt_kprintf("KEY: boot init finished (try long press ~1s)\r\n");

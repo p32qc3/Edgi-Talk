@@ -1,0 +1,15 @@
+import rtconfig
+from building import *
+
+cwd = GetCurrentDir()
+src = Glob('*.c')
+path = [cwd]
+
+# 添加共享头文件路径
+path += [cwd + '/..']
+path += [cwd + '/../../../pet_shared']
+path += [cwd + '/../pet_logic/common']
+
+group = DefineGroup('comm_ai', src, depend = [''], CPPPATH = path)
+
+Return('group')
