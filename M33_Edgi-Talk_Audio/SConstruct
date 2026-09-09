@@ -151,6 +151,8 @@ if platform.system() == 'Windows':
     # SDK_ROOT is the project directory, go up 2 levels to reach sdk-bsp root
     SDK_BSP_ROOT = os.path.dirname(os.path.dirname(SDK_ROOT))
     EDGEPROTECTTOOLS = os.path.join(SDK_BSP_ROOT, 'tools', 'edgeprotecttools', 'bin', 'edgeprotecttools.exe')
+    if not os.path.exists(EDGEPROTECTTOOLS):
+        EDGEPROTECTTOOLS = os.path.join(SDK_ROOT, 'tools', 'edgeprotecttools', 'bin', 'edgeprotecttools.exe')
     BOOT_CONFIG = os.path.join(SDK_ROOT, 'config', 'boot_with_extended_boot_scons.json')
 
     if os.path.exists(EDGEPROTECTTOOLS) and os.path.exists(BOOT_CONFIG):
