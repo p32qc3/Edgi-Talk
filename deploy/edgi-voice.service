@@ -1,0 +1,21 @@
+[Unit]
+Description=Edgi-Talk voice gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=edgi-voice
+Group=edgi-voice
+WorkingDirectory=/opt/edgi-voice
+EnvironmentFile=/etc/edgi-voice/edgi-voice.env
+ExecStart=/opt/edgi-voice/venv/bin/uvicorn ecs.voice_gateway.app:create_app_from_env --factory --host ${EDGI_LISTEN_HOST} --port ${EDGI_LISTEN_PORT}
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
