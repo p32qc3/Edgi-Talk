@@ -12,10 +12,17 @@ Import('RTT_ROOT')
 inc = [os.path.join(cwd, 'include')]
 shared_dir = os.path.normpath(os.path.join(cwd, '../../../pet_shared'))
 inc.append(shared_dir)
-src += [os.path.join(shared_dir, 'edgi_voice_ring.c')]
 lwip_inc = os.path.join(RTT_ROOT, 'components', 'net', 'lwip', 'lwip-2.1.2', 'src', 'include')
 inc.append(lwip_inc)
 
 group = DefineGroup('edgi_m33_pack', src, depend=[''], CPPPATH=inc)
+# The M33 and M55 compiler ABIs differ, so never leave this shared source's
+# object beside pet_shared where the other project could reuse it.
+ring_target = os.path.normpath(os.path.join(
+    cwd, '../../build/applications/m33/edgi_voice_ring_m33.o'))
+ring_object = Env.Object(target=ring_target,
+                         source=os.path.join(shared_dir, 'edgi_voice_ring.c'),
+                         CPPPATH=inc)
+result = group + ring_object
 
-Return('group')
+Return('result')

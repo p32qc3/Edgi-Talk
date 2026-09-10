@@ -22,3 +22,36 @@ int ai_action_decide(const AiEvent *event, AiActionDecision *decision)
         decision->start_simon = 1;
     return 1;
 }
+
+void ai_voice_action_bridge_init(AiVoiceActionBridge *bridge)
+{
+    if (bridge) memset(bridge, 0, sizeof(*bridge));
+}
+
+int ai_voice_action_bridge_decide(AiVoiceActionBridge *bridge,
+                                  u32 turn_id,
+                                  VoiceAction action,
+                                  u8 simon_online,
+                                  AiVoiceActionDecision *decision)
+{
+    if (decision) decision->dispatch = AI_VOICE_DISPATCH_NONE;
+    if (!bridge || !decision || !turn_id || turn_id == bridge->last_turn_id)
+        return 0;
+
+    switch (action) {
+    case VOICE_ACTION_SHOW_STATUS:
+        decision->dispatch = AI_VOICE_DISPATCH_SHOW_STATUS;
+        break;
+    case VOICE_ACTION_HOME:
+        decision->dispatch = AI_VOICE_DISPATCH_HOME;
+        break;
+    case VOICE_ACTION_START_SIMON:
+        decision->dispatch = simon_online ? AI_VOICE_DISPATCH_START_SIMON :
+                                            AI_VOICE_DISPATCH_SIMON_OFFLINE;
+        break;
+    default:
+        return 0;
+    }
+    bridge->last_turn_id = turn_id;
+    return 1;
+}

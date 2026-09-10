@@ -20,7 +20,9 @@ function Build-And-Run([string]$name, [string[]]$sources) {
 
 try {
     & (Join-Path $PSScriptRoot 'test_voice_config.ps1')
-    if ($LASTEXITCODE -ne 0) { throw 'voice_config failed' }
+    if (-not $?) { throw 'voice_config failed' }
+    & (Join-Path $PSScriptRoot 'test_voice_ui_font.ps1')
+    if (-not $?) { throw 'voice_ui_font failed' }
     Build-And-Run 'test_comm_link' @(
         (Join-Path $PSScriptRoot 'test_comm_link.c'),
         (Join-Path $comm 'comm_link.c'),
@@ -52,6 +54,10 @@ try {
     Build-And-Run 'test_voice_response' @(
         (Join-Path $PSScriptRoot 'test_voice_response.c'),
         (Join-Path $voice 'voice_response.c'))
+    Build-And-Run 'test_voice_action_bridge' @(
+        (Join-Path $PSScriptRoot 'test_voice_action_bridge.c'),
+        (Join-Path $comm 'ai_action.c'),
+        (Join-Path $comm 'ai_client.c'))
 }
 finally {
     Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.exe' -File |

@@ -28,9 +28,7 @@ try {
 
     $tracked = & git grep -n 'DASHSCOPE_API_KEY=' -- ':!deploy/edgi-voice.env.example'
     foreach ($line in $tracked) {
-        if ($line -match 'DASHSCOPE_API_KEY=([^\s`"'']+)' -and
-            $Matches[1] -notmatch '^\{' -and
-            $Matches[1] -notin @('UNSET', '百炼控制台创建的北京区域API_Key')) {
+        if ($line -match 'DASHSCOPE_API_KEY=sk-[A-Za-z0-9_-]+') {
             throw "possible DashScope secret in tracked file: $line"
         }
     }

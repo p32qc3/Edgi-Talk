@@ -180,6 +180,14 @@ static void handle_effect(VoiceEffect effect)
             view_set_error(-11);
         break;
     case VOICE_EFFECT_UPLOAD:
+        if (!s_service.session.speech_seen ||
+            s_service.recording_bytes < 3200u)
+        {
+            event = event_make(VOICE_EVENT_UPLOAD_FAILED, effect.turn_id);
+            handle_effect(dispatch(&event));
+            view_set_error(-40);
+            break;
+        }
         if (!voice_wifi_is_online())
         {
             event = event_make(VOICE_EVENT_UPLOAD_FAILED, effect.turn_id);
@@ -238,9 +246,11 @@ static void handle_effect(VoiceEffect effect)
     case VOICE_EFFECT_EXECUTE_ACTION:
         if (effect.action != VOICE_ACTION_NONE)
         {
+            rt_mutex_take(&s_service.view_lock, RT_WAITING_FOREVER);
             s_service.action_turn_id = effect.turn_id;
             s_service.action = effect.action;
             s_service.action_ready = 1u;
+            rt_mutex_release(&s_service.view_lock);
         }
         break;
     default:
@@ -357,11 +367,18 @@ void voice_service_get_view(VoiceView *view)
 
 int voice_service_take_action(uint32_t *turn_id, VoiceAction *action)
 {
-    if (!turn_id || !action || !s_service.action_ready) return 0;
-    *turn_id = s_service.action_turn_id;
-    *action = s_service.action;
-    s_service.action_ready = 0u;
-    return 1;
+    int ready = 0;
+    if (!turn_id || !action) return 0;
+    rt_mutex_take(&s_service.view_lock, RT_WAITING_FOREVER);
+    if (s_service.action_ready)
+    {
+        *turn_id = s_service.action_turn_id;
+        *action = s_service.action;
+        s_service.action_ready = 0u;
+        ready = 1;
+    }
+    rt_mutex_release(&s_service.view_lock);
+    return ready;
 }
 
 static int voice_service_init(void)

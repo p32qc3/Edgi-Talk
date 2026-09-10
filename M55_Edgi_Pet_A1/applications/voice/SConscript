@@ -1,11 +1,21 @@
 import rtconfig
 from building import *
+import os
 
 cwd = GetCurrentDir()
 shared = cwd + '/../../../pet_shared'
-src = Glob('*.c') + [shared + '/edgi_voice_ring.c']
+src = Glob('*.c')
 path = [cwd, shared]
 
 group = DefineGroup('voice', src, depend = [''], CPPPATH = path)
+# M33 and M55 use different floating-point ABIs.  Keep the shared source's
+# generated objects project-local so an incremental build cannot reuse the
+# other core's incompatible object file.
+ring_target = os.path.normpath(os.path.join(
+    cwd, '../../build/applications/voice/edgi_voice_ring_m55.o'))
+ring_object = Env.Object(target = ring_target,
+                         source = shared + '/edgi_voice_ring.c',
+                         CPPPATH = path)
+result = group + ring_object
 
-Return('group')
+Return('result')

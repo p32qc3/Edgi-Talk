@@ -1,6 +1,9 @@
 #include "pet_pages.h"
 #include "pet_ui.h"
+#include "comm_ai/ai_action.h"
 #include "comm_ai/pet_service_status.h"
+#include "voice/voice_http.h"
+#include "voice/voice_service.h"
 #include <lvgl.h>
 #include <string.h>
 #include <stdint.h>
@@ -19,9 +22,10 @@ typedef struct {
     lv_obj_t *catalog, *detail, *game_title, *game_caption, *link_text, *catalog_hint;
     lv_obj_t *game_primary, *primary_text, *game_back, *detail_title, *detail_body, *detail_hint;
     lv_obj_t *mini_mood, *mini_trust, *mini_state, *mini_eyes[2], *mini_closed[2];
-    lv_obj_t *mini_dizzy[2], *status_caption, *service_status;
+    lv_obj_t *mini_dizzy[2], *status_caption, *service_status, *voice_button;
     lv_obj_t *status_values[3], *status_rows[5];
     lv_obj_t *save_hint, *save_button, *save_caption;
+    AiVoiceActionBridge voice_actions;
     u8 current, detail_open, locked, nav_drawn, last_page, last_locked;
 } PetPages;
 static PetPages s_pages;
@@ -106,6 +110,57 @@ static void save_clicked(lv_event_t *event)
 {
     (void)event;
     if (pet_app_save() != RT_EOK) rt_kprintf("[A4] save request queue full\n");
+}
+
+static void voice_clicked(lv_event_t *event)
+{
+    (void)event;
+    voice_service_toggle();
+}
+
+static const char *voice_status_text(const VoiceView *voice)
+{
+    switch (voice->state) {
+    case VOICE_VIEW_READY: return "MIC 点击开始";
+    case VOICE_VIEW_LISTENING: return "MIC 正在记录...";
+    case VOICE_VIEW_THINKING: return "AI 思考中...";
+    case VOICE_VIEW_SPEAKING: return "AI 正在回应...";
+    case VOICE_VIEW_ERROR:
+        return voice->error_code == -40 ? "MIC 没有记录，请重试" :
+               voice->error_code == VOICE_HTTP_OFFLINE ? "WIFI 未连接" :
+                                                        "WIFI 连接未成功";
+    case VOICE_VIEW_CONNECTING: return "WIFI 未连接";
+    default: return "";
+    }
+}
+
+static void apply_voice_action(const PetGame *game)
+{
+    AiVoiceActionDecision decision;
+    VoiceAction action;
+    uint32_t turn_id;
+    u8 simon_online = game->connected &&
+                      (game->capabilities & PET_GAME_CAP_SIMON);
+
+    while (voice_service_take_action(&turn_id, &action)) {
+        if (!ai_voice_action_bridge_decide(&s_pages.voice_actions, turn_id,
+                                           action, simon_online, &decision))
+            continue;
+        switch (decision.dispatch) {
+        case AI_VOICE_DISPATCH_SHOW_STATUS:
+            (void)pet_app_navigate(PET_PAGE_STATUS);
+            break;
+        case AI_VOICE_DISPATCH_HOME:
+            (void)pet_app_navigate(PET_PAGE_HOME);
+            break;
+        case AI_VOICE_DISPATCH_START_SIMON:
+        case AI_VOICE_DISPATCH_SIMON_OFFLINE:
+            (void)pet_app_request_game(PET_GAME_SIMON);
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 static void detail_clicked(lv_event_t *event)
@@ -265,9 +320,19 @@ void pet_pages_create(void)
     pet_ui_create(s_pages.page[PET_PAGE_HOME]);
     create_games(s_pages.page[PET_PAGE_GAMES]);
     create_status(s_pages.page[PET_PAGE_STATUS]);
-    s_pages.service_status = label(s_pages.root, "AI:DEMO | 51:WAIT | AB1",
-        170, 30, 278, &pet_font_22, MUTED);
-    lv_obj_set_style_text_align(s_pages.service_status, LV_TEXT_ALIGN_RIGHT, 0);
+    s_pages.voice_button = box(s_pages.root, 170, 20, 278, 44, 0xE4ECE0, 18);
+    lv_obj_add_flag(s_pages.voice_button, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(s_pages.voice_button, LV_OBJ_FLAG_PRESS_LOCK);
+    lv_obj_set_style_bg_color(s_pages.voice_button, lv_color_hex(0xC5D8C7),
+                              LV_STATE_PRESSED);
+    lv_obj_set_style_bg_color(s_pages.voice_button, lv_color_hex(0xE6E7DE),
+                              LV_STATE_DISABLED);
+    lv_obj_add_event_cb(s_pages.voice_button, voice_clicked, LV_EVENT_CLICKED,
+                        RT_NULL);
+    s_pages.service_status = label(s_pages.voice_button,
+        "AI:DEMO | 51:WAIT | AB1", 8, 5, 262, &pet_font_22, MUTED);
+    lv_obj_set_style_text_align(s_pages.service_status, LV_TEXT_ALIGN_CENTER, 0);
+    ai_voice_action_bridge_init(&s_pages.voice_actions);
     box(s_pages.root, 32, 721, 416, 1, 0xE1E5DB, 0);
     for (i = 0; i < 3; i++)
         s_pages.nav[i] = button(s_pages.root, names[i], 32 + (int)i * 142, 734, 132, 50,
@@ -302,9 +367,21 @@ void pet_pages_update(const PetAppView *view, u32 now)
     int active = pet_game_active(g), ready = g->connected && (g->capabilities & PET_GAME_CAP_SIMON);
     char value[64], progress[64], result[80];
     char service[PET_SERVICE_STATUS_TEXT_MAX];
+    VoiceView voice;
     unsigned i;
-    if (pet_service_status_format_current(service, sizeof(service)))
-        set_text(s_pages.service_status, service);
+    voice_service_get_view(&voice);
+    if (voice.configured) {
+        set_text(s_pages.service_status, voice_status_text(&voice));
+        enable(s_pages.voice_button,
+               voice.state == VOICE_VIEW_READY ||
+               voice.state == VOICE_VIEW_LISTENING ||
+               voice.state == VOICE_VIEW_ERROR);
+        apply_voice_action(g);
+    } else {
+        if (pet_service_status_format_current(service, sizeof(service)))
+            set_text(s_pages.service_status, service);
+        enable(s_pages.voice_button, 0);
+    }
     s_pages.locked = (u8)active;
     if (active && (!s_pages.detail_open || s_pages.current != PET_PAGE_GAMES)) {
         pet_pages_show(PET_PAGE_GAMES);
