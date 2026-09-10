@@ -79,6 +79,13 @@
 #define FINSH_ARG_MAX 10
 #define FINSH_USING_OPTION_COMPLETION
 
+/* uart2 belongs to CM33; CM55 registers uart5 without claiming the console. */
+#define EDGI_M55_UART_CONSOLE 0
+#define EDGI_M55_FINSH_SHELL 0
+#if !EDGI_M55_FINSH_SHELL
+#undef RT_USING_FINSH
+#endif
+
 /* DFS: device virtual file system */
 
 /* end of DFS: device virtual file system */

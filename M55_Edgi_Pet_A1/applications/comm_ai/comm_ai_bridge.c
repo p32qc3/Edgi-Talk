@@ -15,6 +15,14 @@
 #include "ai_offline.h"
 #include "pet_service_status.h"
 
+#ifndef EDGI_M55_UART_CONSOLE
+#define EDGI_M55_UART_CONSOLE 1
+#endif
+
+#if !EDGI_M55_UART_CONSOLE
+#include "drv_uart.h"
+#endif
+
 #define COMM_UART_NAME "uart5"
 #define COMM_BAUDRATE 115200
 #define COMM_THREAD_STACK_SIZE 2048
@@ -224,6 +232,10 @@ int comm_ai_bridge_init(void)
     pet_service_status_set_version("AB1");
     pet_service_status_set_ai_state(PET_AI_DEMO);
     pet_service_status_set_51_state(PET_51_WAIT);
+#if !EDGI_M55_UART_CONSOLE
+    /* Board init deliberately leaves uart2 to CM33. Register CM55's uart5 now. */
+    rt_hw_uart_init();
+#endif
     if (rt_mq_init(&ai_queue, "ai_cmd", ai_queue_pool,
         sizeof(AiDemoCommand), sizeof(ai_queue_pool), RT_IPC_FLAG_FIFO) != RT_EOK)
         return -RT_ERROR;

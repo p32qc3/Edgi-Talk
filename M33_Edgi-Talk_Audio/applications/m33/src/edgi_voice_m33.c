@@ -14,6 +14,7 @@ static volatile rt_bool_t s_recording;
 static uint32_t s_command_sequence;
 static uint32_t s_generation;
 static rt_bool_t s_play_end_requested;
+static uint8_t s_playback[EDGI_VOICE_PLAY_CHUNK];
 
 static void flush_status(EdgiVoiceShm *shared)
 {
@@ -124,7 +125,6 @@ static void handle_command(EdgiVoiceShm *shared, unsigned command)
 static void voice_thread_entry(void *parameter)
 {
     EdgiVoiceShm *shared = edgi_voice_shm_get();
-    uint8_t playback[EDGI_VOICE_PLAY_CHUNK];
     unsigned command;
     (void)parameter;
     while (1)
@@ -135,10 +135,10 @@ static void voice_thread_entry(void *parameter)
             handle_command(shared, command);
         if (shared->playback_state == EDGI_VOICE_PLAYING)
         {
-            bytes = downlink_read(shared, playback, sizeof(playback));
+            bytes = downlink_read(shared, s_playback, sizeof(s_playback));
             if (bytes)
             {
-                rt_ssize_t written = edgi_audio_playback_write(playback, bytes);
+                rt_ssize_t written = edgi_audio_playback_write(s_playback, bytes);
                 if (written != (rt_ssize_t)bytes)
                 {
                     shared->error_code = 3u;
