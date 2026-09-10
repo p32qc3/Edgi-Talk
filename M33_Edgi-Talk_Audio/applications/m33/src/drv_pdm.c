@@ -135,3 +135,32 @@ rt_ssize_t edgi_audio_capture_read_frame(int16_t *buf, rt_size_t samples)
 
     return (rt_ssize_t)EDGI_AUDIO_SAMPLES_PER_FRAME;
 }
+
+rt_err_t edgi_audio_playback_start(void)
+{
+    struct rt_audio_caps caps;
+    int stream = AUDIO_STREAM_REPLAY;
+    if (s_sound == RT_NULL) return -RT_ENOSYS;
+
+    caps.main_type = AUDIO_TYPE_OUTPUT;
+    caps.sub_type = AUDIO_DSP_PARAM;
+    caps.udata.config.samplerate = (int)EDGI_AUDIO_SAMPLE_RATE_HZ;
+    caps.udata.config.channels = 1;
+    caps.udata.config.samplebits = 16;
+    if (rt_device_control(s_sound, AUDIO_CTL_CONFIGURE, &caps) != RT_EOK)
+        return -RT_ERROR;
+    return rt_device_control(s_sound, AUDIO_CTL_START, &stream);
+}
+
+rt_ssize_t edgi_audio_playback_write(const void *data, rt_size_t bytes)
+{
+    if (s_sound == RT_NULL || data == RT_NULL || !bytes) return -RT_EINVAL;
+    return rt_device_write(s_sound, 0, data, bytes);
+}
+
+void edgi_audio_playback_stop(void)
+{
+    int stream = AUDIO_STREAM_REPLAY;
+    if (s_sound != RT_NULL)
+        (void)rt_device_control(s_sound, AUDIO_CTL_STOP, &stream);
+}

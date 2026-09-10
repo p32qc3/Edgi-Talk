@@ -1,5 +1,6 @@
 #include "../include/app_ai.h"
 #include "../include/edgi_audio_capture.h"
+#include "../include/edgi_voice_m33.h"
 #include "../include/edgi_m33_m55_shm.h"
 #include <rtthread.h>
 #include <string.h>
@@ -585,6 +586,12 @@ static void ai_thread_entry(void *param)
         if (edgi_audio_capture_is_paused())
             continue;
 
+        if (edgi_voice_m33_is_recording())
+        {
+            (void)edgi_voice_m33_publish_pcm(pcm, EDGI_AUDIO_SAMPLES_PER_FRAME);
+            continue;
+        }
+
 #if EDGI_AI_ENERGY_GATE
         uint32_t frame_msq = pcm_mean_sq_u32(pcm, EDGI_AUDIO_SAMPLES_PER_FRAME);
 #endif
@@ -750,6 +757,13 @@ rt_err_t app_ai_start(struct rt_messagequeue *mq_alarm)
     if (e != RT_EOK)
     {
         rt_kprintf("[AI] FAIL: edgi_audio_capture_init (%d), check mic0\n", (int)e);
+        return e;
+    }
+
+    e = edgi_voice_m33_init();
+    if (e != RT_EOK)
+    {
+        rt_kprintf("[voice] FAIL: edgi_voice_m33_init (%d)\n", (int)e);
         return e;
     }
 

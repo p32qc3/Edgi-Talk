@@ -10,6 +10,9 @@ Import('RTT_ROOT')
 # Important: RT-Thread makefile generation collects `CPPPATH` (not LOCAL_CPPPATH),
 # so we set CPPPATH to make it appear in compiler -I options.
 inc = [os.path.join(cwd, 'include')]
+shared_dir = os.path.normpath(os.path.join(cwd, '../../../pet_shared'))
+inc.append(shared_dir)
+src += [os.path.join(shared_dir, 'edgi_voice_ring.c')]
 lwip_inc = os.path.join(RTT_ROOT, 'components', 'net', 'lwip', 'lwip-2.1.2', 'src', 'include')
 inc.append(lwip_inc)
 

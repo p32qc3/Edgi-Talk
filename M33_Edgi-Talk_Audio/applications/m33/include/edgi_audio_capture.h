@@ -53,4 +53,8 @@ rt_ssize_t edgi_audio_capture_read_frame(int16_t *buf, rt_size_t samples);
 void edgi_audio_capture_set_paused(rt_bool_t paused);
 rt_bool_t edgi_audio_capture_is_paused(void);
 
+rt_err_t edgi_audio_playback_start(void);
+rt_ssize_t edgi_audio_playback_write(const void *data, rt_size_t bytes);
+void edgi_audio_playback_stop(void);
+
 #endif /* EDGI_AUDIO_CAPTURE_H */
