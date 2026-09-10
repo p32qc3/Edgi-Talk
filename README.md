@@ -35,6 +35,20 @@
 
 详细步骤见 [ECS 自建部署说明](docs/ECS_DEPLOYMENT.md)。
 
+## 宠物版语音对话
+
+`M55_Edgi_Pet_A1` 已接入脱离电脑的语音闭环：板载麦克风录音，通过 Wi-Fi 发到自己的 ECS，ECS 调用百炼千问完成识别、回答和语音合成，再由板载扬声器播放。只允许 AI 执行“查看状态”、“回主页”和“开始记忆挑战”等预先允许的操作。
+
+真实 API Key 只填在 ECS 的 `/etc/edgi-voice/edgi-voice.env`，不要填到板子或 GitHub。ECS 部署方法见 [语音服务部署说明](docs/voice-ecs-deployment.md)。
+
+板子仅需 Wi-Fi、ECS 公网地址和设备令牌。在 PowerShell 中运行：
+
+```powershell
+.\tools\configure_board_voice.ps1
+```
+
+按提示输入 Wi-Fi 名称、Wi-Fi 密码，以及 ECS 文件中的 `EDGI_DEVICE_TOKEN`。密码不会显示，脚本只会写入已被 Git 忽略的 `voice_private_config.h`。填完后重新编译 M55，再按“M33 先、M55 后”的顺序烧录。
+
 ## 构建说明
 
 仓库只保留作品自行实现和重点修改的代码，不包含完整 RT-Thread SDK、厂商软件包和编译缓存。请在 RT-Thread Studio 中使用对应 Edgi-Talk 板级支持包导入两套工程。
