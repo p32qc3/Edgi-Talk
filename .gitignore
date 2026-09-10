@@ -23,6 +23,7 @@ edgi_alarm.env
 wifi_credentials.*
 credentials.*
 secrets.*
+M55_Edgi_Pet_A1/applications/voice/voice_private_config.h
 
 # Python
 __pycache__/

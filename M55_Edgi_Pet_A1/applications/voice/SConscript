@@ -2,8 +2,9 @@ import rtconfig
 from building import *
 
 cwd = GetCurrentDir()
-src = Glob('*.c')
-path = [cwd, cwd + '/../../../pet_shared']
+shared = cwd + '/../../../pet_shared'
+src = Glob('*.c') + [shared + '/edgi_voice_ring.c']
+path = [cwd, shared]
 
 group = DefineGroup('voice', src, depend = [''], CPPPATH = path)
 

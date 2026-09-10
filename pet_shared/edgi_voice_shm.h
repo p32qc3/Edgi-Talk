@@ -53,15 +53,16 @@ typedef struct
     volatile uint32_t total_bytes;
     volatile uint32_t flags;
     volatile uint32_t command_seq;
-    volatile uint32_t command_ack_seq;
     volatile uint32_t command;
+    uint32_t _command_padding[2];
+    volatile uint32_t command_ack_seq;
     volatile uint32_t record_state;
     volatile uint32_t playback_state;
     volatile uint32_t error_code;
     volatile uint32_t record_bytes;
     volatile uint32_t playback_bytes;
     volatile uint32_t heartbeat;
-    uint32_t _header_padding[3];
+    uint32_t _status_padding;
     EdgiVoiceRing uplink;
     EdgiVoiceRing downlink;
 } EdgiVoiceShm;
@@ -70,6 +71,10 @@ typedef char edgi_voice_shm_must_fit[
     (sizeof(EdgiVoiceShm) <= EDGI_VOICE_SHM_REGION_SIZE) ? 1 : -1];
 typedef char edgi_voice_ring_must_be_cache_aligned[
     ((sizeof(EdgiVoiceRing) & 31u) == 0u) ? 1 : -1];
+typedef char edgi_voice_command_line_must_end_at_32[
+    (offsetof(EdgiVoiceShm, command_ack_seq) == 32u) ? 1 : -1];
+typedef char edgi_voice_rings_must_start_at_64[
+    (offsetof(EdgiVoiceShm, uplink) == 64u) ? 1 : -1];
 
 void edgi_voice_ring_reset(EdgiVoiceRing *ring, uint32_t generation);
 size_t edgi_voice_ring_available(const EdgiVoiceRing *ring);

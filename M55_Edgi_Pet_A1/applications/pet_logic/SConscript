@@ -6,11 +6,15 @@ sources = ['/edgi/pet_core.c', '/edgi/interaction_hold.c', '/edgi/storage.c',
            '/common/reliable.c']
 smif = os.path.normpath(os.path.join(cwd, '..', '..', 'libraries', 'components',
     'mtb-device-support-pse8xxgp', 'pdl', 'drivers', 'source'))
-sources = [cwd + name for name in sources] + [
-    os.path.join(smif, 'cy_smif.c'),
-    os.path.join(smif, 'cy_smif_memslot.c'),
-    os.path.join(smif, 'cy_smif_hb_flash.c'),
-    os.path.join(smif, 'cy_smif_sfdp.c'),
-    os.path.join(smif, 'cy_smif_memnum.c')]
+sources = [cwd + name for name in sources]
+# Minimal pet builds provide these SMIF sources here. Network-enabled builds
+# already receive them from the vendor PDL group and must not link them twice.
+if not GetDepend(['BSP_USING_FLASH']) and not GetDepend(['BSP_USING_HYPERAM']):
+    sources += [
+        os.path.join(smif, 'cy_smif.c'),
+        os.path.join(smif, 'cy_smif_memslot.c'),
+        os.path.join(smif, 'cy_smif_hb_flash.c'),
+        os.path.join(smif, 'cy_smif_sfdp.c'),
+        os.path.join(smif, 'cy_smif_memnum.c')]
 group = DefineGroup('PetCore', sources, depend=[''], CPPPATH=[cwd])
 Return('group')

@@ -1,0 +1,11 @@
+#ifndef VOICE_PRIVATE_CONFIG_H
+#define VOICE_PRIVATE_CONFIG_H
+
+#define VOICE_PRIVATE_CONFIG_READY 0
+#define VOICE_WIFI_SSID             "UNSET"
+#define VOICE_WIFI_PASSWORD         "UNSET"
+#define VOICE_ECS_HOST              "UNSET"
+#define VOICE_DEVICE_ID             "UNSET"
+#define VOICE_DEVICE_TOKEN          "UNSET"
+
+#endif /* VOICE_PRIVATE_CONFIG_H */

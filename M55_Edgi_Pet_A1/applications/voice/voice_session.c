@@ -162,6 +162,16 @@ VoiceEffect voice_session_dispatch(VoiceSession *session,
     }
 
     if (session->state == VOICE_STATE_SPEAKING &&
+        event->type == VOICE_EVENT_PLAY_FAILED &&
+        active_turn_matches(session, event))
+    {
+        session->state = VOICE_STATE_ERROR;
+        session->pending_action = VOICE_ACTION_NONE;
+        return effect_make(VOICE_EFFECT_CANCEL, session->active_turn_id,
+                           VOICE_ACTION_NONE);
+    }
+
+    if (session->state == VOICE_STATE_SPEAKING &&
         event->type == VOICE_EVENT_PLAY_DONE &&
         active_turn_matches(session, event))
     {

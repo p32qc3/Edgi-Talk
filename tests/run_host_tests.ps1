@@ -19,6 +19,8 @@ function Build-And-Run([string]$name, [string[]]$sources) {
 }
 
 try {
+    & (Join-Path $PSScriptRoot 'test_voice_config.ps1')
+    if ($LASTEXITCODE -ne 0) { throw 'voice_config failed' }
     Build-And-Run 'test_comm_link' @(
         (Join-Path $PSScriptRoot 'test_comm_link.c'),
         (Join-Path $comm 'comm_link.c'),

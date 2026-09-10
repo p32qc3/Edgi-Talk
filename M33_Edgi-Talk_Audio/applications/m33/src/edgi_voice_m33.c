@@ -15,14 +15,14 @@ static uint32_t s_command_sequence;
 static uint32_t s_generation;
 static rt_bool_t s_play_end_requested;
 
-static void flush_control(EdgiVoiceShm *shared)
+static void flush_status(EdgiVoiceShm *shared)
 {
-    edgi_shm_cache_flush(shared, 64);
+    edgi_shm_cache_flush((uint8_t *)shared + 32u, 32);
 }
 
-static void invalidate_control(EdgiVoiceShm *shared)
+static void invalidate_command(EdgiVoiceShm *shared)
 {
-    edgi_shm_cache_invalidate(shared, 64);
+    edgi_shm_cache_invalidate(shared, 32);
 }
 
 static void flush_ring_write(EdgiVoiceRing *ring, uint32_t old_head, size_t size)
@@ -65,7 +65,7 @@ static void playback_finish(EdgiVoiceShm *shared, uint32_t state)
     edgi_audio_capture_set_paused(RT_FALSE);
     shared->playback_state = state;
     s_play_end_requested = RT_FALSE;
-    flush_control(shared);
+    flush_status(shared);
 }
 
 static void handle_command(EdgiVoiceShm *shared, unsigned command)
@@ -118,7 +118,7 @@ static void handle_command(EdgiVoiceShm *shared, unsigned command)
         break;
     }
     shared->command_ack_seq = s_command_sequence;
-    flush_control(shared);
+    flush_status(shared);
 }
 
 static void voice_thread_entry(void *parameter)
@@ -130,7 +130,7 @@ static void voice_thread_entry(void *parameter)
     while (1)
     {
         size_t bytes;
-        invalidate_control(shared);
+        invalidate_command(shared);
         if (edgi_voice_command_take(shared, &s_command_sequence, &command))
             handle_command(shared, command);
         if (shared->playback_state == EDGI_VOICE_PLAYING)
@@ -147,14 +147,14 @@ static void voice_thread_entry(void *parameter)
                 else
                 {
                     shared->playback_bytes += (uint32_t)bytes;
-                    flush_control(shared);
+                    flush_status(shared);
                 }
             }
             else if (s_play_end_requested)
                 playback_finish(shared, EDGI_VOICE_PLAY_DRAINED);
         }
         shared->heartbeat++;
-        flush_control(shared);
+        flush_status(shared);
         rt_thread_mdelay(5);
     }
 }
@@ -200,11 +200,11 @@ rt_err_t edgi_voice_m33_publish_pcm(const int16_t *pcm, rt_size_t samples)
         s_recording = RT_FALSE;
         shared->record_state = EDGI_VOICE_RECORD_ERROR;
         shared->error_code = 4u;
-        flush_control(shared);
+        flush_status(shared);
         return -RT_EFULL;
     }
     flush_ring_write(ring, old_head, bytes);
     shared->record_bytes += (uint32_t)bytes;
-    flush_control(shared);
+    flush_status(shared);
     return RT_EOK;
 }
